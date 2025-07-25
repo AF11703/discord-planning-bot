@@ -90,38 +90,68 @@ module.exports = {
             components: [row]
         })
 
-
         const userResponses = new Collection();
-        try {
-            const selectInteraction = await response.awaitMessageComponent({
-                filter: i => i.customId === 'date-select' && i.user.id === interaction.user.id,
-                time: responseDuration
-            })
+        
+        const responseCollection = response.createMessageComponentCollector({
+            componentType: ComponentType.StringSelect,
+            time: responseDuration
+        })
 
+        responseCollection.on('collect', async (selection) => {
+            const userId = selection.user.id
+            const userTag = selection.user.tag
+            const userDates = selection.values
+            const timeResponded = new Date()
+
+            userResponses.set(userId, {
+                tag: userTag,   
+                dates: userDates,
+                response_time: timeResponded
+            })
             
-
-            const selectedDates = selectInteraction.values
-            console.log(`User: ${selectInteraction.user.tag}`)
-            console.log(`Selected dates: ${selectedDates.join(' | ')}`)
-
-            await selectInteraction.reply({
-                content: `You selected:\n ${selectedDates.join(' | ')}`,
-                flags: MessageFlags.Ephemeral
-            })
-
-            userResponses.set(selectInteraction.user.id, {
-                userTag: selectInteraction.user.tag,
-                dates: selectInteraction.values,
-                timeResponded: new Date()
-            })
-        }
-        catch (error) {
-            console.log(error)
-            await response.edit({
-                content: "Ran out of time.",
+            await selection.reply({
+                content: `Response recorded... You chose dates:\n 
+                    ${userDates.join(' | ')} on ${timeResponded.toISOString()}`,
+                flags: MessageFlags.Ephemeral,
                 components: []
             })
-        }
+        })
+
+
+        responseCollection.on('end', async () => {
+            const datesCollection = new Collection()
+
+            dates.forEach((date) => {
+                datesCollection.set(date, {
+                    count: 0,
+                    users: []
+                })
+            })
+
+            for (const [userId, userData] of userResponses) {
+                userData.dates.forEach((date) => {
+                    const data = datesCollection.get(date)
+                    if (data) {
+                        data.count++
+                        data.users.push(userId)
+                    }
+                })
+            }
+
+            const dateOptions = []
+            datesCollection.filter((data) => data.count > 0)
+                .forEach((data, date) => {
+                    dateOptions.push(`${date}: ${data.count} selections 
+                    made by ${data.users.map(userId => `<@${userId}>`).join(', ')}`)
+            })
+
+            await interaction.editReply({
+                content: dateOptions.join('\n'),
+                components: []
+            })
+        })
+
+
 
         // const chooseTimesBtn = new ButtonBuilder()
         //     .setCustomId('choose-times')
@@ -135,5 +165,10 @@ module.exports = {
         //     content: "Press the button below to select times for the dates you selected",
         //     components: [timeRow]
         // })
+
+
+        
+        
+        
     }
 }
