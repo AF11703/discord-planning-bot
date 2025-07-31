@@ -83,9 +83,10 @@ module.exports = {
         //i.e. if user puts two mins => 120_000 ms.. if user puts 0 or less, automatically default to one minute
         const responseDuration = 
             interaction.options.getInteger('response-duration') > 0 ? interaction.options.getInteger('response-duration') * ONE_MIN_IN_MS : ONE_MIN_IN_MS 
-        
+        const activity = interaction.options.getString('plan-name')
+
         const response = await interaction.editReply({
-            content: `${interaction.user.tag} wants to plan: ${interaction.options.getString('plan-name')}\n
+            content: `${interaction.user.tag} wants to plan: ${activity}\n
                 You have ${responseDuration/ONE_MIN_IN_MS} minute(s) to respond.`,
             components: [row]
         })
@@ -111,7 +112,7 @@ module.exports = {
             
             await selection.reply({
                 content: `Response recorded... You chose dates:\n 
-                    ${userDates.join(' | ')} on ${timeResponded.toISOString()}`,
+                    ${userDates.join('\n')} on ${format(timeResponded, 'Pp')}`,
                 flags: MessageFlags.Ephemeral,
                 components: []
             })
@@ -138,33 +139,60 @@ module.exports = {
                 })
             }
 
-            const dateOptions = []
-            datesCollection.filter((data) => data.count > 0)
-                .forEach((data, date) => {
-                    dateOptions.push(`${date}: ${data.count} selections 
-                    made by ${data.users.map(userId => `<@${userId}>`).join(', ')}`)
-            })
+            
+            const dateOptions = [...datesCollection.filter((data) => data.count > 0)
+                .sort((dataA, dataB) => dataB.count - dataA.count)]
 
-            await interaction.editReply({
-                content: dateOptions.join('\n'),
-                components: []
-            })
+
+            if (!dateOptions) {
+                await interaction.editReply({
+                    content: 'No response recorded to the /plan command. Please try again.',
+                    flags: MessageFlags.Ephemeral
+                })
+
+                return
+            }
+
+
+            const maxOptions = dateOptions.filter((data) => data.count === dateOptions[0].count)
+
+            if (maxOptions.length() == 1) {
+                await interaction.editReply({
+                    content: `${activity} has been planned for ${maxOptions[0]}.\n 
+                    Click below to add event to Google Calendar`
+                })
+            }
+            else {
+                const finalizeDateSelect = new StringSelectMenuBuilder()
+                    .setCustomId('maxDate-select')
+                    .setPlaceholder('Finalize date selection')
+                    .setMinValues(1)
+                    .setMaxValues(1)
+                    .addOptions(
+                        maxOptions.map((obj) => new StringSelectMenuOptionBuilder()
+                            .setLabel(obj[0])
+                            .setValue(obj[0])
+                        )
+                    )
+                
+                const finalSelectRow = new ActionRowBuilder()
+                    .addComponents(finalizeDateSelect)
+
+                const finalDateResponse = await interaction.editReply({
+                    content: 'Choose the date to finalize planning',
+                    components: [finalSelectRow]
+                })
+                
+                //TODO: Continue response collection for final date selection
+                const finalDateCollection = finalDateResponse.createMessageComponentCollector()
+            }
+
+            //Could potentially use the below interaction reply for the followUp on final date
+        //     await interaction.editReply({ 
+        //         content: dateOptions.join('\n'),
+        //         components: []
+        //     })
         })
-
-
-
-        // const chooseTimesBtn = new ButtonBuilder()
-        //     .setCustomId('choose-times')
-        //     .setLabel('Choose Times')
-        //     .setStyle(ButtonStyle.Primary)
-
-        // const timeRow = new ActionRowBuilder()
-        //     .addComponents(chooseTimesBtn)
-
-        // const timesResponse = await interaction.followUp({
-        //     content: "Press the button below to select times for the dates you selected",
-        //     components: [timeRow]
-        // })
 
 
         
