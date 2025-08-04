@@ -1,8 +1,14 @@
 const { EmbedBuilder, Collection, TextInputBuilder, ModalBuilder, TextInputStyle, Options, ChatInputCommandInteraction, userMention } = require('discord.js');
 const { SlashCommandBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, InteractionCollector, ComponentType, User, MessageFlags, InteractionCallback, Emoji, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require('discord.js');
 const { add, format } = require('date-fns')
+const express = require('express')
 
 const ONE_MIN_IN_MS = 60_000
+const app = express()
+
+app.get('/api', (req, res) => {
+    res.send("Placeholder for now")
+})
 
 module.exports = {
     cooldown: 5,
@@ -111,8 +117,7 @@ module.exports = {
             })
             
             await selection.reply({
-                content: `Response recorded... You chose dates:\n 
-                    ${userDates.join('\n')} on ${format(timeResponded, 'Pp')}`,
+                content: `Response recorded... You chose dates:\n ${userDates.join('\n')} on ${format(timeResponded, 'Pp')}`,
                 flags: MessageFlags.Ephemeral,
                 components: []
             })
@@ -156,10 +161,22 @@ module.exports = {
 
             const maxOptions = dateOptions.filter((data) => data.count === dateOptions[0].count)
 
-            if (maxOptions.length() == 1) {
+            if (maxOptions.length == 1) {
+                app.listen(3000, () => {
+                    console.log("Callback URL clicked")
+                })
+
+                //TODO: Setup Google Calendar event build
+                const calendarBtn = new ButtonBuilder()
+                    .setLabel('Google Calendar')
+                    .setStyle(ButtonStyle.Link)
+                    .setURL('http://localhost:3000/api')
+                const btnRow = new ActionRowBuilder()
+                    .addComponents(calendarBtn)
                 await interaction.editReply({
-                    content: `${activity} has been planned for ${maxOptions[0]}.\n 
-                    Click below to add event to Google Calendar`
+                    content: `${activity} has been planned for ${maxOptions[0][0]}.\n 
+                    Click below to add event to Google Calendar`,
+                    components: [btnRow]
                 })
             }
             else {
@@ -177,7 +194,6 @@ module.exports = {
                 
                 const finalSelectRow = new ActionRowBuilder()
                     .addComponents(finalizeDateSelect)
-
                 const finalDateResponse = await interaction.editReply({
                     content: 'Choose the date to finalize planning',
                     components: [finalSelectRow]
@@ -185,14 +201,14 @@ module.exports = {
                 
                 //TODO: Continue response collection for final date selection
                 const finalDateCollection = finalDateResponse.createMessageComponentCollector()
-            }
 
-            //Could potentially use the below interaction reply for the followUp on final date
-        //     await interaction.editReply({ 
-        //         content: dateOptions.join('\n'),
-        //         components: []
-        //     })
+                finalDateCollection.on('collect', (selection) => {
+                    console.log('collected')
+                })
+            }
         })
+
+        
 
 
         
