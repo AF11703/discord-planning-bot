@@ -9,7 +9,6 @@
 	},
 	"rules": {
         "brace-style": ["error", "1tbs"],
-        "semi": ["error", "always"],
         "indent": ["error", "tab"],
         "max-nested-callbacks": ["error", { "max": 4}]
 	}

@@ -1,13 +1,28 @@
-const { EmbedBuilder, Collection, TextInputBuilder, ModalBuilder, TextInputStyle, Options, ChatInputCommandInteraction, userMention } = require('discord.js');
+const { EmbedBuilder, Collection, ChatInputCommandInteraction, userMention } = require('discord.js');
 const { SlashCommandBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, InteractionCollector, ComponentType, User, MessageFlags, InteractionCallback, Emoji, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require('discord.js');
 const { add, format } = require('date-fns')
 const express = require('express')
+const {google} = require('googleapis')
+const creds = require('../../credentials.json')
+const { getOAuth2Client, loadUserCredentials, getAuthUrl, saveUserCredentials } = require('../../utility/auth');
 
 const ONE_MIN_IN_MS = 60_000
 const app = express()
 
-app.get('/api', (req, res) => {
-    res.send("Placeholder for now")
+//TODO: Change to use DB
+app.get('/api/v1/auth/redirect', async (req,res) => {
+    try {
+        const {code, state} = req.query
+        console.log(`Code: ${code}`)
+        console.log(`Discord ID: ${state}`)
+        const oAuth2Client = getOAuth2Client()
+        const {tokens} = await oAuth2Client.getToken(code)
+        await saveUserCredentials(state, tokens)
+        res.send('Authentication successful, you may now return to Discord')
+    } catch(err) {
+        console.error(err)
+        res.send('An error occurred, please try again later')
+    }
 })
 
 module.exports = {
@@ -33,7 +48,7 @@ module.exports = {
      */
     async execute(interaction) {
         await interaction.deferReply()
-
+        app.listen(3000, console.log('Server listening on port 3000'))
 
         const dates = []
         for (let addDays = 0; addDays <= 7; addDays++) {
@@ -245,10 +260,75 @@ module.exports = {
 
         const finalOption = await getFinalOption
 
-        //TODO: Use below to add event to GCal
+        //TODO: Make nicer to look at (Use Embeds perhaps)
         if(finalOption) {
+            const gCalBtn = new ButtonBuilder()
+                .setCustomId('google-cal')
+                .setStyle(ButtonStyle.Primary)
+                .setLabel('Add to Google Calendar')
+
+            const row = new ActionRowBuilder()
+                .setComponents(gCalBtn)
+
+            const buttonFollowUp = await interaction.followUp({
+                content: `${activity} has been planned for ${finalOption}.`,
+                components: [row]
+            })
+
+            const buttonResponse = buttonFollowUp.createMessageComponentCollector({
+                componentType: ComponentType.Button   
+            })
+
+            buttonResponse.on('collect', async (buttonInteraction) => {
+                const userId = buttonInteraction.user.id
+                const userAuth = await loadUserCredentials(userId)
+
+                if (!userAuth) {
+                    const authUrl = getAuthUrl(userId)
+                    await buttonInteraction.reply({
+                        content: `You need to authenticate with Google Calendar first. [Authenticate here](${authUrl})`,
+                        flags: MessageFlags.Ephemeral
+                    })
+                    return
+                }
+
+                const calendar = google.calendar({version: 'v3', auth: userAuth})
+                const event = { 
+                    summary: activity,
+                    location: ' ',
+                    description: ' ',
+                    start: {
+                        dateTime: new Date(finalOption).toISOString(),
+                        timeZone: 'America/New_York'
+                    },
+                    end: {
+                        dateTime: new Date(new Date(finalOption).getTime() + 60 * 60 * 1000).toISOString(),
+                        timeZone: 'America/New_York'
+                    }
+                }
+                try {
+                    const response = await calendar.events.insert({
+                        calendarId: 'primary',
+                        resource: event
+                    })
+
+                    //console.log(response)
+                    await buttonInteraction.reply({
+                        content: `Event added to your Google Calendar. [View Event](${response.data.htmlLink})`,
+                        flags: MessageFlags.Ephemeral
+                    })
+                } catch (err) {
+                    console.error(err)
+                    await buttonInteraction.reply({
+                        content: 'There was an error adding event to Google Calendar',
+                        flags: MessageFlags.Ephemeral
+                    })
+                }
+            })
+        }
+        else {
             await interaction.followUp({
-                content: `${activity} has been planned for ${finalOption}.`
+                content: 'Something went wrong, please try again...'
             })
         }
 
