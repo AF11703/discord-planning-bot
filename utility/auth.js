@@ -1,6 +1,3 @@
-const fsp = require('fs').promises
-const fs = require('fs')
-const path = require('path')
 const { google } = require('googleapis')
 const creds = require('../credentials.json')
 
@@ -25,33 +22,8 @@ function getAuthUrl(userId) {
   })
 }
 
-//TODO: Change to use DB
-async function loadUserCredentials(userId) {
-  const tokenPath = path.join(__dirname, '../user-tokens', `${userId}.json`)
-  if (!fs.existsSync(tokenPath)) {
-    return null
-  }
-  try {
-    const token = await fsp.readFile(tokenPath, 'utf-8')
-    const oAuth2Client = getOAuth2Client()
-    oAuth2Client.setCredentials(JSON.parse(token))
-    return oAuth2Client
-  } catch (err) {
-    console.error(err)
-    return null
-  }
-}
 
-//TODO: Change to use DB
-async function saveUserCredentials(userId, token) {
-  const dirPath = path.join(__dirname, '../user-tokens')
-  const tokenPath = path.join(dirPath, `${userId}.json`)
-  await fsp.mkdir(dirPath, {recursive: true})
-  await fsp.writeFile(tokenPath, JSON.stringify(token))
-}
 module.exports = {
   getOAuth2Client,
-  loadUserCredentials,
-  getAuthUrl,
-  saveUserCredentials
+  getAuthUrl
 }

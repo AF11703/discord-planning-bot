@@ -1,29 +1,48 @@
-const { EmbedBuilder, Collection, ChatInputCommandInteraction, userMention } = require('discord.js');
-const { SlashCommandBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, InteractionCollector, ComponentType, User, MessageFlags, InteractionCallback, Emoji, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require('discord.js');
+const { 
+    EmbedBuilder,
+    Collection, 
+    ChatInputCommandInteraction, 
+    userMention,
+    SlashCommandBuilder, 
+    ButtonBuilder, 
+    ButtonStyle, 
+    ActionRowBuilder, 
+    InteractionCollector, 
+    ComponentType, 
+    User, 
+    MessageFlags, 
+    InteractionCallback, 
+    Emoji, 
+    StringSelectMenuBuilder, 
+    StringSelectMenuOptionBuilder
+} = require('discord.js');
+
 const { add, format } = require('date-fns')
-const express = require('express')
+//const express = require('express')
 const {google} = require('googleapis')
-const creds = require('../../credentials.json')
-const { getOAuth2Client, loadUserCredentials, getAuthUrl, saveUserCredentials } = require('../../utility/auth');
+const { getOAuth2Client, getAuthUrl } = require('../../utility/auth')
+const { loadUserCredentials, saveUserCredentials } = require('../../utility/db-tasks')
+
 
 const ONE_MIN_IN_MS = 60_000
-const app = express()
+//const app = express()
 
-//TODO: Change to use DB
-app.get('/api/v1/auth/redirect', async (req,res) => {
-    try {
-        const {code, state} = req.query
-        console.log(`Code: ${code}`)
-        console.log(`Discord ID: ${state}`)
-        const oAuth2Client = getOAuth2Client()
-        const {tokens} = await oAuth2Client.getToken(code)
-        await saveUserCredentials(state, tokens)
-        res.send('Authentication successful, you may now return to Discord')
-    } catch(err) {
-        console.error(err)
-        res.send('An error occurred, please try again later')
-    }
-})
+
+// app.get('/api/v1/auth/redirect', async (req,res) => {
+//     try {
+//         const {code, state} = req.query
+//         console.log(`Code: ${code}`)
+//         console.log(`Discord ID: ${state}`)
+//         const oAuth2Client = getOAuth2Client()
+//         const {tokens} = await oAuth2Client.getToken(code)
+//         const {refresh_token} = tokens
+//         await saveUserCredentials(state, refresh_token)
+//         res.send('Authentication successful, you may now return to Discord')
+//     } catch(err) {
+//         console.error(err)
+//         res.send('An error occurred, please try again later')
+//     }
+// })
 
 module.exports = {
     cooldown: 5,
@@ -48,7 +67,7 @@ module.exports = {
      */
     async execute(interaction) {
         await interaction.deferReply()
-        app.listen(3000, console.log('Server listening on port 3000'))
+        //app.listen(3000, console.log('Server listening on port 3000'))
 
         const dates = []
         for (let addDays = 0; addDays <= 7; addDays++) {
@@ -293,6 +312,7 @@ module.exports = {
                 }
 
                 const calendar = google.calendar({version: 'v3', auth: userAuth})
+                //TODO: Make event nicer and more detailed
                 const event = { 
                     summary: activity,
                     location: ' ',

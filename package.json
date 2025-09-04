@@ -15,7 +15,8 @@
     "dotenv": "^16.4.7",
     "express": "^5.1.0",
     "googleapis": "^105.0.0",
-    "mongoose": "^8.18.0"
+    "mongoose": "^8.18.0",
+    "mongoose-field-encryption": "7.0.1"
   },
   "devDependencies": {
     "eslint": "^9.17.0"

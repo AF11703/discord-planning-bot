@@ -1,15 +1,9 @@
-const mongoose = require('mongoose')
+const {model, Schema} = require('mongoose')
 
-//TODO: Determine encryption method (mongoose-encrpytion or CSFLE w/ Mongoose)
-const User = new mongoose.Schema({
+//TODO: Add encryption for refresh_token
+const User = new Schema({
   discordId: {type: String, unique: true, required: true},
-  token: {
-    access_token: {type: String},
-    refresh_token: {type: String},
-    scope: {type: String},
-    token_type: {type: String},
-    expiry_date: {type: Number}
-  }
+  refresh_token: {type: String}
 })
 
-module.exports = mongoose.model('User', User)
+module.exports = model('User', User)
