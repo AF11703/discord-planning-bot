@@ -1,9 +1,16 @@
 const {model, Schema} = require('mongoose')
+const { fieldEncryption } = require('mongoose-field-encryption')
 
-//TODO: Add encryption for refresh_token
-const User = new Schema({
+const UserSchema = new Schema({
   discordId: {type: String, unique: true, required: true},
   refresh_token: {type: String}
 })
 
-module.exports = model('User', User)
+UserSchema.plugin(fieldEncryption, {
+  fields: ['refresh_token'],
+  secret: process.env.ENC_KEY
+})
+
+const User = model('User', UserSchema)
+
+module.exports = User

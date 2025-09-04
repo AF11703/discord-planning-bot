@@ -279,7 +279,7 @@ module.exports = {
 
         const finalOption = await getFinalOption
 
-        //TODO: Make nicer to look at (Use Embeds perhaps)
+        //TODO: Make nicer to look at (Use Embeds perhaps).
         if(finalOption) {
             const gCalBtn = new ButtonBuilder()
                 .setCustomId('google-cal')
@@ -312,7 +312,7 @@ module.exports = {
                 }
 
                 const calendar = google.calendar({version: 'v3', auth: userAuth})
-                //TODO: Make event nicer and more detailed
+                //TODO: Make event nicer and more detailed.
                 const event = { 
                     summary: activity,
                     location: ' ',
@@ -351,9 +351,5 @@ module.exports = {
                 content: 'Something went wrong, please try again...'
             })
         }
-
-
-
-
     }
 }
