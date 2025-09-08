@@ -126,7 +126,7 @@ module.exports = {
         const activity = interaction.options.getString('plan-name')
 
         const response = await interaction.editReply({
-            content: `${interaction.user.tag} wants to plan: ${activity}\n
+            content: `${userMention(interaction.user.id)} wants to plan: ${activity}\n
                 You have ${responseDuration / ONE_MIN_IN_MS} minute(s) to respond.`,
             components: [row]
         })
@@ -213,7 +213,7 @@ module.exports = {
                     const finalSelectRow = new ActionRowBuilder()
                         .addComponents(finalizeDateSelect)
                     const finalDateResponse = await interaction.editReply({
-                        content: `${userMention(interaction.user.id)}, choose a date to finalize planning`,
+                        content: `${userMention(interaction.user.id)}, choose your preferred date of the choices below to finalize data selection`,
                         components: [finalSelectRow],
                         flags: MessageFlags.Ephemeral
                     })
@@ -342,7 +342,7 @@ module.exports = {
 
                     //console.log(response)
                     await buttonInteraction.reply({
-                        content: `Event added to your Google Calendar. [View Event](${response.data.htmlLink})`,
+                        content: `Event ${activity} added to your Google Calendar. [View Event](${response.data.htmlLink})`,
                         flags: MessageFlags.Ephemeral
                     })
                 } catch (err) {
