@@ -14,7 +14,8 @@ const {
     InteractionCallback, 
     Emoji, 
     StringSelectMenuBuilder, 
-    StringSelectMenuOptionBuilder
+    StringSelectMenuOptionBuilder,
+    Colors
 } = require('discord.js');
 
 const { add, format } = require('date-fns')
@@ -22,7 +23,6 @@ const { add, format } = require('date-fns')
 const {google} = require('googleapis')
 const { getOAuth2Client, getAuthUrl } = require('../../utility/auth')
 const { loadUserCredentials, saveUserCredentials } = require('../../utility/db-tasks')
-
 
 const ONE_MIN_IN_MS = 60_000
 //const app = express()
@@ -279,8 +279,17 @@ module.exports = {
 
         const finalOption = await getFinalOption
 
-        //TODO: Make nicer to look at (Use Embeds perhaps).
+        
         if(finalOption) {
+            const embed = new EmbedBuilder()
+                .setTitle('Date for plan chosen!')
+                .setFooter({text: 'Click the button below to add this event to your Google Calendar.'})
+                .setColor(Colors.DarkRed)
+                .addFields(
+                    {name: 'Date', value: finalOption, inline: true},
+                    {name: 'Activity', value: activity, inline: true}
+                )
+
             const gCalBtn = new ButtonBuilder()
                 .setCustomId('google-cal')
                 .setStyle(ButtonStyle.Primary)
@@ -290,8 +299,8 @@ module.exports = {
                 .setComponents(gCalBtn)
 
             const buttonFollowUp = await interaction.followUp({
-                content: `${activity} has been planned for ${finalOption}.`,
-                components: [row]
+                components: [row],
+                embeds: [embed]
             })
 
             const buttonResponse = buttonFollowUp.createMessageComponentCollector({
@@ -312,7 +321,6 @@ module.exports = {
                 }
 
                 const calendar = google.calendar({version: 'v3', auth: userAuth})
-                //TODO: Make event nicer and more detailed.
                 const event = { 
                     summary: activity,
                     location: ' ',
@@ -322,7 +330,7 @@ module.exports = {
                         timeZone: 'America/New_York'
                     },
                     end: {
-                        dateTime: new Date(new Date(finalOption).getTime() + 60 * 60 * 1000).toISOString(),
+                        dateTime: new Date(new Date(finalOption).getTime() + 24 * 60 * 60 * 1000).toISOString(),
                         timeZone: 'America/New_York'
                     }
                 }

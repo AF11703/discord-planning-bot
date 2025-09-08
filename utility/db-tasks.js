@@ -2,7 +2,7 @@ const User = require('../model/User')
 const { getOAuth2Client } = require('./auth')
 
 async function loadUserCredentials(userId) {
-  const user = await User.findOne({discordId: userId}) //TODO: Read 'User.js'
+  const user = await User.findOne({discordId: userId}) 
 
   if (!user) {
     return null
