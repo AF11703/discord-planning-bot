@@ -4,13 +4,11 @@ const { saveUserCredentials } = require('../utility/db-tasks')
 const authenticateUser = async (req, res) => {
     try {
         const {code, state} = req.query
-        console.log(`Code: ${code}`)
-        console.log(`Discord ID: ${state}`)
         const oAuth2Client = getOAuth2Client()
         const {tokens} = await oAuth2Client.getToken(code)
         const {refresh_token} = tokens
         await saveUserCredentials(state, refresh_token)
-        res.send('Authentication successful, you may now return to Discord')
+        res.send('Authentication successful. Try adding to event to Google Calendar again in Discord.')
     } catch(err) {
         console.error(err)
         res.send('An error occurred, please try again later')
