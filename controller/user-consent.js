@@ -8,7 +8,7 @@ const authenticateUser = async (req, res) => {
         const {tokens} = await oAuth2Client.getToken(code)
         const {refresh_token} = tokens
         await saveUserCredentials(state, refresh_token)
-        res.send('Authentication successful. Try adding to event to Google Calendar again in Discord.')
+        res.send('Authentication successful. Try adding event to Google Calendar again in Discord.')
     } catch(err) {
         console.error(err)
         res.send('An error occurred, please try again later')
