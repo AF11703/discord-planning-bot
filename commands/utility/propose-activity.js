@@ -7,42 +7,19 @@ const {
     ButtonBuilder, 
     ButtonStyle, 
     ActionRowBuilder, 
-    InteractionCollector, 
     ComponentType, 
-    User, 
-    MessageFlags, 
-    InteractionCallback, 
-    Emoji, 
+    MessageFlags,  
     StringSelectMenuBuilder, 
     StringSelectMenuOptionBuilder,
     Colors
 } = require('discord.js');
 
 const { add, format } = require('date-fns')
-//const express = require('express')
 const {google} = require('googleapis')
-const { getOAuth2Client, getAuthUrl } = require('../../utility/auth')
-const { loadUserCredentials, saveUserCredentials } = require('../../utility/db-tasks')
+const { getAuthUrl } = require('../../utility/auth')
+const { loadUserCredentials } = require('../../utility/db-tasks')
 
 const ONE_MIN_IN_MS = 60_000
-//const app = express()
-
-
-// app.get('/api/v1/auth/redirect', async (req,res) => {
-//     try {
-//         const {code, state} = req.query
-//         console.log(`Code: ${code}`)
-//         console.log(`Discord ID: ${state}`)
-//         const oAuth2Client = getOAuth2Client()
-//         const {tokens} = await oAuth2Client.getToken(code)
-//         const {refresh_token} = tokens
-//         await saveUserCredentials(state, refresh_token)
-//         res.send('Authentication successful, you may now return to Discord')
-//     } catch(err) {
-//         console.error(err)
-//         res.send('An error occurred, please try again later')
-//     }
-// })
 
 module.exports = {
     cooldown: 5,
@@ -67,7 +44,6 @@ module.exports = {
      */
     async execute(interaction) {
         await interaction.deferReply()
-        //app.listen(3000, console.log('Server listening on port 3000'))
 
         const dates = []
         for (let addDays = 0; addDays <= 7; addDays++) {
@@ -340,7 +316,6 @@ module.exports = {
                         resource: event
                     })
 
-                    //console.log(response)
                     await buttonInteraction.reply({
                         content: `Event ${activity} added to your Google Calendar. [View Event](${response.data.htmlLink})`,
                         flags: MessageFlags.Ephemeral
